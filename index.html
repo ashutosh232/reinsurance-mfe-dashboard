@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Reinsurance & Risk Analytics - Microfrontend Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        dark: {
+                            bg: '#0b0f19',
+                            card: '#111827',
+                            border: '#1f2937',
+                            accent: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0b0f19] text-gray-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation / Microfrontend Shell Bar -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-gray-800 px-4 lg:px-8 py-3">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Brand & Shell Indicator -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid me-0 fa-shield-halved text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base font-bold tracking-tight text-white">NexusRe Shell</h1>
+                            <span class="text-[10px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">v5.4.2 MFE</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Enterprise Reinsurance & Risk Engine</p>
+                    </div>
+                </div>
+
+                <!-- Portfolio Badge for Upwork Viewers -->
+                <div class="md:hidden">
+                    <span class="text-xs bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded-full border border-indigo-500/20 font-medium">Ashutosh Moralwar</span>
+                </div>
+            </div>
+
+            <!-- MFE Module Switcher -->
+            <div class="flex items-center gap-2 bg-gray-900/80 p-1.5 rounded-xl border border-gray-800 w-full md:w-auto overflow-x-auto">
+                <button onclick="switchModule('risk')" id="btn-mfe-risk" class="mfe-tab flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+                    <i class="fa-solid fa-chart-line text-cyan-300"></i>
+                    <span>Risk Analytics MFE</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                </button>
+                <button onclick="switchModule('treaty')" id="btn-mfe-treaty" class="mfe-tab flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>Treaty Admin MFE</span>
+                </button>
+                <button onclick="switchModule('claims')" id="btn-mfe-claims" class="mfe-tab flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <span>Claims Engine MFE</span>
+                </button>
+            </div>
+
+            <!-- Shell Utilities & Profile -->
+            <div class="hidden md:flex items-center gap-3">
+                <button onclick="toggleMfeInspector()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-cubes text-indigo-400"></i>
+                    <span>MFE Inspector</span>
+                </button>
+                <button onclick="toggleCodeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-code"></i>
+                    <span>View React/TS Code</span>
+                </button>
+                <div class="h-6 w-[1px] bg-gray-800"></div>
+                <div class="flex items-center gap-2.5 bg-gray-900/60 px-3 py-1 rounded-full border border-gray-800">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-xs">AM</div>
+                    <div class="text-left">
+                        <p class="text-xs font-semibold text-gray-200">Ashutosh Moralwar</p>
+                        <p class="text-[10px] text-indigo-400 font-mono">Senior Lead Architect</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+
+        <!-- Module Status Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-indigo-950/30 border border-indigo-800/40 px-4 py-2.5 rounded-xl text-xs font-mono text-indigo-300">
+            <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="text-gray-400">Remote Entry:</span> <span class="text-white">http://mfe-analytics.internal:8081/remoteEntry.js</span>
+                </span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span><span class="text-gray-400">Framework:</span> <span class="text-cyan-300">React 18.3 + TS 5.4</span></span>
+                <span><span class="text-gray-400">State:</span> <span class="text-purple-300">Redux Toolkit + Zustand</span></span>
+                <span><span class="text-gray-400">Test Coverage:</span> <span class="text-emerald-400">94.2% Jest</span></span>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Metric 1 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-indigo-500/40 transition">
+                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-indigo-600/10 rounded-full blur-xl group-hover:bg-indigo-600/20 transition"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Gross Written Premium</p>
+                        <h3 class="text-2xl font-bold text-white mt-1">$1.42 Billion</h3>
+                    </div>
+                    <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                        <i class="fa-solid fa-sack-dollar text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-emerald-400 font-medium gap-1">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span>+12.8% YOY</span>
+                    <span class="text-gray-500 ml-1">vs target ($1.35B)</span>
+                </div>
+            </div>
+
+            <!-- Metric 2 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-emerald-500/40 transition">
+                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-600/10 rounded-full blur-xl group-hover:bg-emerald-600/20 transition"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Combined Loss Ratio</p>
+                        <h3 class="text-2xl font-bold text-white mt-1">62.4%</h3>
+                    </div>
+                    <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+                        <i class="fa-solid fa-scale-balanced text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-emerald-400 font-medium gap-1">
+                    <i class="fa-solid fa-arrow-trend-down"></i>
+                    <span>-3.1% (Favorable)</span>
+                    <span class="text-gray-500 ml-1">Threshold: 70%</span>
+                </div>
+            </div>
+
+            <!-- Metric 3 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-cyan-600/10 rounded-full blur-xl group-hover:bg-cyan-600/20 transition"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Solvency II Coverage</p>
+                        <h3 class="text-2xl font-bold text-white mt-1">214.5%</h3>
+                    </div>
+                    <div class="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 border border-cyan-500/20">
+                        <i class="fa-solid fa-shield-cat text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-cyan-400 font-medium gap-1">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Strong Capital Surplus</span>
+                </div>
+            </div>
+
+            <!-- Metric 4 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-purple-500/40 transition">
+                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-purple-600/10 rounded-full blur-xl group-hover:bg-purple-600/20 transition"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Claims Settlement Rate</p>
+                        <h3 class="text-2xl font-bold text-white mt-1">98.2%</h3>
+                    </div>
+                    <div class="p-2.5 bg-purple-500/10 rounded-xl text-purple-400 border border-purple-500/20">
+                        <i class="fa-solid fa-bolt text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-purple-400 font-medium gap-1">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>Avg. 4.2 Days turn-around</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Grid: Charts & Calculator -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Chart 1: Loss Ratio Trends (2 cols) -->
+            <div class="lg:col-span-2 glass-panel p-6 rounded-2xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-indigo-400"></i>
+                            Reinsurance Loss Ratio & Exposure Trends (2025 - 2026)
+                        </h2>
+                        <p class="text-xs text-gray-400">Real-time telemetry stream from Underwriting Core engine</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-900/60 p-1 rounded-lg border border-gray-800 self-start sm:self-auto">
+                        <button onclick="updateChartPeriod('quarter')" id="btn-chart-q" class="px-2.5 py-1 text-xs rounded bg-indigo-600 text-white font-medium">Quarterly</button>
+                        <button onclick="updateChartPeriod('monthly')" id="btn-chart-m" class="px-2.5 py-1 text-xs rounded text-gray-400 hover:text-white">Monthly</button>
+                    </div>
+                </div>
+                <div class="h-64 sm:h-72 w-full relative">
+                    <canvas id="lossRatioChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Underwriting Risk Calculator Widget -->
+            <div class="glass-panel p-6 rounded-2xl space-y-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-calculator text-cyan-400"></i>
+                            Live Risk Underwriter
+                        </h2>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">WASM Engine</span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mt-3">Adjust parameters to compute real-time treaty exposure and estimated maximum loss (PML).</p>
+
+                    <!-- Sliders -->
+                    <div class="space-y-4 mt-4">
+                        <!-- Slider 1 -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-300 font-medium">Loss Event Frequency</span>
+                                <span class="font-mono text-cyan-400 font-bold" id="val-frequency">12 / yr</span>
+                            </div>
+                            <input type="range" min="1" max="50" value="12" id="range-frequency" oninput="calculateRisk()" class="w-full accent-cyan-400 bg-gray-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Slider 2 -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-300 font-medium">Exposure Multiplier ($M)</span>
+                                <span class="font-mono text-indigo-400 font-bold" id="val-exposure">$45M</span>
+                            </div>
+                            <input type="range" min="10" max="200" value="45" id="range-exposure" oninput="calculateRisk()" class="w-full accent-indigo-500 bg-gray-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Slider 3 -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-300 font-medium">Retention Deductible (%)</span>
+                                <span class="font-mono text-emerald-400 font-bold" id="val-retention">15%</span>
+                            </div>
+                            <input type="range" min="5" max="50" value="15" id="range-retention" oninput="calculateRisk()" class="w-full accent-emerald-400 bg-gray-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculated Output Card -->
+                <div class="bg-gray-900/90 border border-gray-800 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-gray-400">Probable Max Loss (PML):</span>
+                        <span class="font-mono font-bold text-white text-sm" id="calc-pml">$459.0M</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-gray-400">Net Risk Score Index:</span>
+                        <span class="font-mono font-bold text-emerald-400 text-xs px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20" id="calc-score">MODERATE (4.2)</span>
+                    </div>
+                    <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mt-2">
+                        <div id="risk-bar" class="bg-gradient-to-r from-emerald-400 via-yellow-400 to-rose-500 h-full w-[42%] transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Heatmap / Matrix & Domain Allocation -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Portfolio Risk Heatmap Matrix (2 cols) -->
+            <div class="lg:col-span-2 glass-panel p-6 rounded-2xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-cubes-stacked text-purple-400"></i>
+                            Regional & Sector Exposure Heatmap
+                        </h2>
+                        <p class="text-xs text-gray-400">Underwriting risk density broken down by global region and business vertical</p>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="flex items-center gap-2">
+                        <select id="region-filter" onchange="renderHeatmap()" class="bg-gray-900 border border-gray-800 text-xs text-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+                            <option value="ALL">All Regions (Global)</option>
+                            <option value="APAC">APAC Region</option>
+                            <option value="EMEA">EMEA Region</option>
+                            <option value="NA">North America</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Heatmap Table Grid -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-300 border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-400 uppercase tracking-wider font-mono">
+                                <th class="p-3">Domain / Sector</th>
+                                <th class="p-3 text-center">North America</th>
+                                <th class="p-3 text-center">EMEA</th>
+                                <th class="p-3 text-center">APAC</th>
+                                <th class="p-3 text-center">LATAM</th>
+                                <th class="p-3 text-right">Total Exposure</th>
+                            </tr>
+                        </thead>
+                        <tbody id="heatmap-body" class="divide-y divide-gray-800/50">
+                            <!-- JS Inject Heatmap Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Asset Allocation Donut Chart -->
+            <div class="glass-panel p-6 rounded-2xl space-y-4 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+                        Treaty Capital Allocation
+                    </h2>
+                    <p class="text-xs text-gray-400">Distribution across underwriting treaties</p>
+                </div>
+                <div class="h-56 w-full relative flex items-center justify-center">
+                    <canvas id="allocationChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono border-t border-gray-800 pt-3">
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Property: 40%</div>
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Casualty: 25%</div>
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Energy & Marine: 20%</div>
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Aviation: 15%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Reinsurance Treaty Table -->
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-signature text-indigo-400"></i>
+                        Active Reinsurance Treaty Registry
+                    </h2>
+                    <p class="text-xs text-gray-400">Dynamic state table managed via Redux Toolkit slice with real-time filters</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                        <input type="text" id="treaty-search" oninput="renderTreaties()" placeholder="Search treaty ID, cedant..." class="bg-gray-900 border border-gray-800 text-xs text-gray-200 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:border-indigo-500 w-48 sm:w-64">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <select id="treaty-status" onchange="renderTreaties()" class="bg-gray-900 border border-gray-800 text-xs text-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                        <option value="ALL">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Pending Renewal">Pending Renewal</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-300 border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-gray-400 font-mono uppercase tracking-wider">
+                            <th class="p-3">Treaty Code</th>
+                            <th class="p-3">Cedant / Insurer</th>
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Limit Amount</th>
+                            <th class="p-3">Attachment Point</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="treaty-table-body" class="divide-y divide-gray-800/60">
+                        <!-- JS Dynamic Insert -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal 1: Microfrontend Architecture Inspector -->
+    <div id="modal-mfe" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel border border-gray-700 w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/80">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-cubes text-indigo-400"></i>
+                    <h3 class="text-sm font-bold text-white">Webpack Module Federation & MFE Telemetry</h3>
+                </div>
+                <button onclick="toggleMfeInspector()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto text-xs">
+                
+                <!-- Diagram Card -->
+                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-3">
+                    <h4 class="font-mono text-indigo-400 font-semibold uppercase text-[11px]">Runtime Microfrontend Topology</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
+                        <div class="p-3 rounded-lg bg-indigo-950/50 border border-indigo-800/60">
+                            <p class="font-bold text-white">NexusRe Shell Container</p>
+                            <p class="text-[10px] text-gray-400 font-mono mt-1">Host App (Port 3000)</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">Loaded</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-cyan-950/50 border border-cyan-800/60">
+                            <p class="font-bold text-white">Risk Analytics Remote</p>
+                            <p class="text-[10px] text-gray-400 font-mono mt-1">Module Federation v5</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">Active</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-purple-950/50 border border-purple-800/60">
+                            <p class="font-bold text-white">Treaty Admin Remote</p>
+                            <p class="text-[10px] text-gray-400 font-mono mt-1">Module Federation v5</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">Standby</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Coverage metrics -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-gray-900 p-3 rounded-xl border border-gray-800">
+                        <p class="text-gray-400 text-[11px]">Jest Test Suites</p>
+                        <p class="text-lg font-bold text-emerald-400 mt-0.5">48 / 48 Passed</p>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-xl border border-gray-800">
+                        <p class="text-gray-400 text-[11px]">Statement Coverage</p>
+                        <p class="text-lg font-bold text-cyan-400 mt-0.5">94.2%</p>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-xl border border-gray-800">
+                        <p class="text-gray-400 text-[11px]">Branch Coverage</p>
+                        <p class="text-lg font-bold text-indigo-400 mt-0.5">91.8%</p>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-xl border border-gray-800">
+                        <p class="text-gray-400 text-[11px]">Initial Chunk Load</p>
+                        <p class="text-lg font-bold text-purple-400 mt-0.5">142 KB (gzip)</p>
+                    </div>
+                </div>
+
+                <!-- State Tree JSON -->
+                <div class="space-y-2">
+                    <h4 class="font-mono text-gray-300 font-semibold">Shared Redux Store State Tree</h4>
+                    <pre class="bg-gray-950 p-4 rounded-xl text-emerald-400 font-mono text-[11px] overflow-x-auto border border-gray-800">
+{
+  "auth": { "user": "Ashutosh Moralwar", "role": "LEAD_ARCHITECT", "authenticated": true },
+  "riskEngine": {
+    "activeTreatiesCount": 142,
+    "combinedRatio": 0.624,
+    "pmlCalculated": 459000000,
+    "federatedRemotes": ["riskAnalytics", "treatyAdmin", "claimsEngine"]
+  },
+  "performance": { "firstContentfulPaint": "0.62s", "timeToInteractive": "1.1s" }
+}</pre>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-900 border-t border-gray-800 flex justify-end">
+                <button onclick="toggleMfeInspector()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg">Close Inspector</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Code Snippet Viewer -->
+    <div id="modal-code" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel border border-gray-700 w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-code text-emerald-400"></i>
+                    <h3 class="text-sm font-bold text-white">React + TypeScript Microfrontend Component</h3>
+                </div>
+                <button onclick="toggleCodeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <pre class="bg-gray-950 p-5 rounded-xl text-gray-200 font-mono text-xs overflow-x-auto border border-gray-800 leading-relaxed">
+<span class="text-purple-400">import</span> React, { useState, useMemo, useCallback } <span class="text-purple-400">from</span> <span class="text-emerald-300">'react'</span>;
+<span class="text-purple-400">import</span> { useSelector, useDispatch } <span class="text-purple-400">from</span> <span class="text-emerald-300">'react-redux'</span>;
+<span class="text-purple-400">import</span> { RootState, AppDispatch } <span class="text-purple-400">from</span> <span class="text-emerald-300">'@store/index'</span>;
+<span class="text-purple-400">import</span> { updateRiskThreshold } <span class="text-purple-400">from</span> <span class="text-emerald-300">'@store/slices/riskSlice'</span>;
+
+<span class="text-gray-500">// Enterprise TypeScript Interface Definitions</span>
+<span class="text-purple-400">export interface</span> <span class="text-yellow-300">ReinsuranceTreaty</span> {
+  id: <span class="text-cyan-300">string</span>;
+  cedantName: <span class="text-cyan-300">string</span>;
+  lineOfBusiness: <span class="text-cyan-300">'Property' | 'Casualty' | 'Energy' | 'Aviation'</span>;
+  limitAmount: <span class="text-cyan-300">number</span>;
+  attachmentPoint: <span class="text-cyan-300">number</span>;
+  status: <span class="text-cyan-300">'Active' | 'Under Review' | 'Pending Renewal'</span>;
+}
+
+<span class="text-purple-400">export const</span> <span class="text-blue-400">RiskUnderwriterWidget</span>: React.FC = () =&gt; {
+  <span class="text-purple-400">const</span> dispatch = useDispatch&lt;AppDispatch&gt;();
+  <span class="text-purple-400">const</span> [exposure, setExposure] = useState&lt;<span class="text-cyan-300">number</span>&gt;(45000000);
+  <span class="text-purple-400">const</span> [frequency, setFrequency] = useState&lt;<span class="text-cyan-300">number</span>&gt;(12);
+
+  <span class="text-gray-500">// Real-time WASM / Reinsurance Calculation memoization</span>
+  <span class="text-purple-400">const</span> probableMaxLoss = useMemo(() =&gt; {
+    <span class="text-purple-400">return</span> (exposure * frequency * 0.85) / 1000000;
+  }, [exposure, frequency]);
+
+  <span class="text-purple-400">const</span> handleRiskUpdate = useCallback((newVal: <span class="text-cyan-300">number</span>) =&gt; {
+    setExposure(newVal);
+    dispatch(updateRiskThreshold({ exposure: newVal }));
+  }, [dispatch]);
+
+  <span class="text-purple-400">return</span> (
+    &lt;<span class="text-indigo-400">div</span> <span class="text-cyan-300">className</span>=<span class="text-emerald-300">"p-6 rounded-2xl glass-panel space-y-4"</span>&gt;
+      &lt;<span class="text-indigo-400">h3</span> <span class="text-cyan-300">className</span>=<span class="text-emerald-300">"text-lg font-bold text-white"</span>&gt;Risk Telemetry Engine&lt;/<span class="text-indigo-400">h3</span>&gt;
+      &lt;<span class="text-indigo-400">p</span> <span class="text-cyan-300">className</span>=<span class="text-emerald-300">"text-xs text-gray-400"</span>&gt;Computed PML: ${probableMaxLoss.toFixed(1)}M&lt;/<span class="text-indigo-400">p</span>&gt;
+    &lt;/<span class="text-indigo-400">div</span>&gt;
+  );
+};</pre>
+            </div>
+            <div class="px-6 py-3 bg-gray-900 border-t border-gray-800 flex justify-between items-center">
+                <span class="text-xs text-gray-400 font-mono">Author: Ashutosh Moralwar (Senior Frontend Engineer)</span>
+                <button onclick="toggleCodeModal()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Treaty Payload Detail Inspector -->
+    <div id="modal-treaty-detail" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel border border-gray-700 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
+                <h3 class="text-sm font-bold text-white" id="modal-treaty-title">Treaty Details</h3>
+                <button onclick="closeTreatyModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4 text-xs">
+                <div class="space-y-1">
+                    <p class="text-gray-400">JSON Payload Response:</p>
+                    <pre id="modal-treaty-json" class="bg-gray-950 p-4 rounded-xl text-cyan-300 font-mono text-[11px] border border-gray-800 overflow-x-auto"></pre>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-900 border-t border-gray-800 flex justify-end">
+                <button onclick="closeTreatyModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/80 bg-gray-950 py-4 px-6 text-center text-xs text-gray-500">
+        <div class="flex flex-col sm:flex-row justify-between items-center max-w-[1600px] mx-auto gap-2">
+            <p>© 2026 NexusRe Microfrontend Architecture Portfolio • Designed by <span class="text-gray-300 font-medium">Ashutosh Moralwar</span></p>
+            <div class="flex items-center gap-4 text-gray-400">
+                <span class="hover:text-indigo-400 cursor-pointer" onclick="toggleMfeInspector()"><i class="fa-solid fa-cubes"></i> MFE Status</span>
+                <span class="hover:text-emerald-400 cursor-pointer" onclick="toggleCodeModal()"><i class="fa-solid fa-code"></i> React/TS Code</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive JavaScript -->
+    <script>
+        // --- Mock Data Store ---
+        const treaties = [
+            { id: "TRY-2026-881", cedant: "Munich Re Syndicate 102", type: "Quota Share", limit: 250000000, attachment: 10000000, status: "Active" },
+            { id: "TRY-2026-942", cedant: "Swiss Re America Corp", type: "Excess of Loss", limit: 500000000, attachment: 50000000, status: "Active" },
+            { id: "TRY-2026-310", cedant: "Lloyd's Syndicate 2987", type: "Stop Loss", limit: 120000000, attachment: 15000000, status: "Under Review" },
+            { id: "TRY-2026-704", cedant: "Hannover Rück SE", type: "Catastrophe XL", limit: 750000000, attachment: 100000000, status: "Active" },
+            { id: "TRY-2026-119", cedant: "SCOR Global P&C", type: "Quota Share", limit: 180000000, attachment: 20000000, status: "Pending Renewal" }
+        ];
+
+        const heatmapData = [
+            { domain: "Property & Property Cat", na: { score: 78, val: "$340M" }, emea: { score: 45, val: "$180M" }, apac: { score: 62, val: "$210M" }, latam: { score: 30, val: "$80M" }, total: "$810M" },
+            { domain: "Casualty & Financial Lines", na: { score: 55, val: "$220M" }, emea: { score: 82, val: "$310M" }, apac: { score: 40, val: "$110M" }, latam: { score: 25, val: "$50M" }, total: "$690M" },
+            { domain: "Energy, Offshore & Marine", na: { score: 32, val: "$110M" }, emea: { score: 68, val: "$240M" }, apac: { score: 85, val: "$290M" }, latam: { score: 48, val: "$120M" }, total: "$760M" },
+            { domain: "Aviation & Aerospace", na: { score: 40, val: "$130M" }, emea: { score: 50, val: "$160M" }, apac: { score: 35, val: "$95M" }, latam: { score: 15, val: "$30M" }, total: "$415M" }
+        ];
+
+        let lossChartInstance = null;
+        let allocationChartInstance = null;
+
+        // --- Chart Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initLossChart('quarter');
+            initAllocationChart();
+            renderHeatmap();
+            renderTreaties();
+            calculateRisk();
+        });
+
+        function initLossChart(period) {
+            const ctx = document.getElementById('lossRatioChart').getContext('2d');
+            
+            const labels = period === 'quarter' 
+                ? ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026 (Est)']
+                : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+            const lossData = period === 'quarter' ? [68.2, 65.4, 61.0, 64.2, 62.4] : [69, 67, 68, 65, 64, 63, 62, 61, 63, 64, 62, 61.5];
+            const targetData = period === 'quarter' ? [70, 70, 70, 70, 70] : Array(12).fill(70);
+
+            if (lossChartInstance) {
+                lossChartInstance.destroy();
+            }
+
+            lossChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Actual Loss Ratio (%)',
+                            data: lossData,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#38bdf8',
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Risk Tolerance Ceiling (%)',
+                            data: targetData,
+                            borderColor: '#f43f5e',
+                            borderDash: [6, 6],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } },
+                        tooltip: { backgroundColor: '#111827', titleColor: '#fff', bodyColor: '#cbd5e1', borderColor: '#374151', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                        y: { min: 50, max: 80, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function updateChartPeriod(p) {
+            document.getElementById('btn-chart-q').className = p === 'quarter' ? "px-2.5 py-1 text-xs rounded bg-indigo-600 text-white font-medium" : "px-2.5 py-1 text-xs rounded text-gray-400 hover:text-white";
+            document.getElementById('btn-chart-m').className = p === 'monthly' ? "px-2.5 py-1 text-xs rounded bg-indigo-600 text-white font-medium" : "px-2.5 py-1 text-xs rounded text-gray-400 hover:text-white";
+            initLossChart(p);
+        }
+
+        function initAllocationChart() {
+            const ctx = document.getElementById('allocationChart').getContext('2d');
+            allocationChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Property', 'Casualty', 'Energy & Marine', 'Aviation'],
+                    datasets: [{
+                        data: [40, 25, 20, 15],
+                        backgroundColor: ['#6366f1', '#38bdf8', '#34d399', '#a855f7'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '72%'
+                }
+            });
+        }
+
+        // --- Live Risk Underwriting Calculation ---
+        function calculateRisk() {
+            const freq = parseInt(document.getElementById('range-frequency').value);
+            const exp = parseInt(document.getElementById('range-exposure').value);
+            const ret = parseInt(document.getElementById('range-retention').value);
+
+            document.getElementById('val-frequency').innerText = `${freq} / yr`;
+            document.getElementById('val-exposure').innerText = `$${exp}M`;
+            document.getElementById('val-retention').innerText = `${ret}%`;
+
+            // Calculate Probable Max Loss (PML)
+            const pml = (exp * freq * (1 - (ret / 100)) * 0.72).toFixed(1);
+            document.getElementById('calc-pml').innerText = `$${pml}M`;
+
+            // Score Index
+            const rawScore = (freq * 0.4) + (exp * 0.05) - (ret * 0.1);
+            let scoreText = "LOW (2.1)";
+            let barWidth = "25%";
+            let scoreClass = "font-mono font-bold text-emerald-400 text-xs px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20";
+
+            if (rawScore > 6) {
+                scoreText = "CRITICAL (8.4)";
+                barWidth = "88%";
+                scoreClass = "font-mono font-bold text-rose-400 text-xs px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20";
+            } else if (rawScore > 3.5) {
+                scoreText = "MODERATE (4.8)";
+                barWidth = "52%";
+                scoreClass = "font-mono font-bold text-yellow-400 text-xs px-2 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20";
+            }
+
+            const scoreElem = document.getElementById('calc-score');
+            scoreElem.innerText = scoreText;
+            scoreElem.className = scoreClass;
+            document.getElementById('risk-bar').style.width = barWidth;
+        }
+
+        // --- Render Heatmap Grid ---
+        function renderHeatmap() {
+            const tbody = document.getElementById('heatmap-body');
+            const region = document.getElementById('region-filter').value;
+            tbody.innerHTML = '';
+
+            heatmapData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/30 transition';
+
+                const getCellHtml = (cellData, isTarget) => {
+                    if (region !== 'ALL' && !isTarget) {
+                        return `<td class="p-3 text-center text-gray-600 font-mono">-</td>`;
+                    }
+                    let bg = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                    if (cellData.score > 70) bg = "bg-rose-500/15 text-rose-300 border-rose-500/30";
+                    else if (cellData.score > 50) bg = "bg-yellow-500/15 text-yellow-300 border-yellow-500/30";
+
+                    return `
+                        <td class="p-3 text-center">
+                            <span class="inline-flex flex-col items-center px-2 py-1 rounded-lg border ${bg} text-[11px]">
+                                <span class="font-bold">${cellData.val}</span>
+                                <span class="text-[9px] opacity-80">Risk: ${cellData.score}</span>
+                            </span>
+                        </td>
+                    `;
+                };
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-white flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-indigo-400 text-xs"></i>
+                        ${row.domain}
+                    </td>
+                    ${getCellHtml(row.na, region === 'NA')}
+                    ${getCellHtml(row.emea, region === 'EMEA')}
+                    ${getCellHtml(row.apac, region === 'APAC')}
+                    ${getCellHtml(row.latam, false)}
+                    <td class="p-3 text-right font-mono font-bold text-indigo-300">${row.total}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Render Reinsurance Treaties Table ---
+        function renderTreaties() {
+            const tbody = document.getElementById('treaty-table-body');
+            const search = document.getElementById('treaty-search').value.toLowerCase();
+            const statusFilter = document.getElementById('treaty-status').value;
+
+            tbody.innerHTML = '';
+
+            const filtered = treaties.filter(t => {
+                const matchesSearch = t.id.toLowerCase().includes(search) || t.cedant.toLowerCase().includes(search);
+                const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            filtered.forEach(t => {
+                let badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if (t.status === "Under Review") badgeClass = "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+                if (t.status === "Pending Renewal") badgeClass = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/40 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-indigo-400 font-semibold">${t.id}</td>
+                    <td class="p-3 text-white font-medium">${t.cedant}</td>
+                    <td class="p-3 text-gray-300">${t.type}</td>
+                    <td class="p-3 font-mono text-gray-200">$${(t.limit / 1000000).toFixed(0)}M</td>
+                    <td class="p-3 font-mono text-gray-400">$${(t.attachment / 1000000).toFixed(0)}M</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-medium border ${badgeClass}">${t.status}</span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="inspectTreaty('${t.id}')" class="px-2.5 py-1 text-[11px] bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition">
+                            <i class="fa-solid fa-code text-cyan-400"></i> JSON
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Module Switcher Interactivity ---
+        function switchModule(mod) {
+            document.querySelectorAll('.mfe-tab').forEach(b => {
+                b.className = "mfe-tab flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition-all";
+            });
+            const activeBtn = document.getElementById(`btn-mfe-${mod}`);
+            if (activeBtn) {
+                activeBtn.className = "mfe-tab flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30";
+            }
+        }
+
+        // --- Modal Toggles ---
+        function toggleMfeInspector() {
+            document.getElementById('modal-mfe').classList.toggle('hidden');
+        }
+
+        function toggleCodeModal() {
+            document.getElementById('modal-code').classList.toggle('hidden');
+        }
+
+        function inspectTreaty(id) {
+            const treaty = treaties.find(t => t.id === id);
+            if (treaty) {
+                document.getElementById('modal-treaty-title').innerText = `Treaty Payload: ${treaty.id}`;
+                document.getElementById('modal-treaty-json').innerText = JSON.stringify({
+                    treatyId: treaty.id,
+                    cedant: treaty.cedant,
+                    underwritingType: treaty.type,
+                    limitUSD: treaty.limit,
+                    attachmentUSD: treaty.attachment,
+                    status: treaty.status,
+                    microfrontendOwner: "TreatyAdminRemote@v5.4.2",
+                    unitTestStatus: "PASSED (Jest RTL)"
+                }, null, 2);
+                document.getElementById('modal-treaty-detail').classList.remove('hidden');
+            }
+        }
+
+        function closeTreatyModal() {
+            document.getElementById('modal-treaty-detail').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
